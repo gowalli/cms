@@ -1,66 +1,37 @@
 <?php
 
-/****************************************
-
-  Copyright 2010 Terry J. Smith
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-****************************************/
-
 // Our MySQL implementation of the abstract database class
 class MySQL extends Database {
 	// Initialize the database connection
-	function initialize($host, $user, $pass, $database) {
-		if(is_array($host))
-			$this->server_list = $host;
-		else
-			array_push($this->server_list, $host);
-
-		$count = 0;
-		while(!$this->conn) {
-			if($count > count($this->server_list))
-				break;
-
-			$this->conn = @mysql_pconnect($this->server_list[rand(0, sizeof($this->server_list) - 1)], $user, $pass);
-			$count++;
+	function initialize($host, $user, $password, $database) {
+		$mysqli = new mysqli($host, $user, $password, $database);
+		if($mysqli->connect_errno) {
+			echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
 		}
 
-		if($this->conn)
-			@mysql_select_db($database, $this->conn);
+		$this->mysqli = $mysqli;
 	}
 
 	// Execute a query, returning the raw results
 	function query($query, $vars = array()) {
-		foreach($vars as $key => $value)
-		{
+		foreach($vars as $key => $value) {
 			$value = mysql_real_escape_string($value);
 			$query = str_replace(":$key", $value, $query);
 		}
 
-		$results = @mysql_query($query, $this->conn);
-		if(mysql_errno())
-			error_log("MySQL Error: ".mysql_error()."\nQuery: ".$query);
+		$results = $this->mysqli->query($query);
+		if($results == false) {
+			error_log("MySQL error (" . $mysqli->errno . "): " . $mysqli->error);
+		}
 
 		return($results);
 	}
 
 	// Execute a query, returning a single object
 	function object_query($query, $vars = array()) {
-		$results = $this->query($query, $vars);
-		if(@mysql_num_rows($results))
-		{
-			return(@mysql_fetch_object($results));
+		$result = $this->query($query, $vars);
+		if($result->num_rows) {
+			return($result->fetch_object());
 		}
 
 		return(false);
@@ -68,27 +39,21 @@ class MySQL extends Database {
 
 	// Execute a query, returning an array of results
 	function array_query($query, $vars = array()) {
-		$results = $this->query($query, $vars);
-                if(@mysql_num_rows($results))
-                {
-                        return(@mysql_fetch_array($results));
-                }
+		$result = $this->query($query, $vars);
+		if($result->num_rows) {
+			return($result->fetch_assoc());
+		}
 
                 return(false);
 	}
 
 	// Execute a query, returning an array of objects
 	function object_array_query($query, $vars = array()) {
-		$results = $this->query($query, $vars);
-		if(mysql_num_rows($results))
-                {
+		$result = $this->query($query, $vars);
+		if($result->num_rows) {
                         $array = array();
-			$object = @mysql_fetch_object($results);
-			while(is_object($object))
-			{
+			while($object = $result->fetch_object())
 				array_push($array, $object);
-				$object = @mysql_fetch_object($results);
-			}
 
 			if(!sizeof($array))
 				return(false);

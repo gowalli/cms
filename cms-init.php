@@ -36,7 +36,7 @@ function yap_autoloader($class) {
 
 spl_autoload_register('yap_autoloader');
 
-$database = DB_TYPE;
+$dbtype = DB_TYPE;
 $database = new $dbtype;
 if(strlen(DB_HOST) && strlen(DB_USER) && strlen(DB_PASS) && strlen(DB_NAME))
-        $database->initialize(DB_HOST, DB_USER, DB_PASS, DB_NAME)
+        $database->initialize(DB_HOST, DB_USER, DB_PASS, DB_NAME);

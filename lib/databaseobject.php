@@ -35,7 +35,7 @@ class DatabaseObject {
 
 	// Fetch an object of this object type from the database
 	static function fetch($vars = array(), $orderby = array()) {
-		global $dbconn;
+		global $database;
 
 		// Get the table name
 		$table = strtolower(get_called_class());
@@ -44,7 +44,7 @@ class DatabaseObject {
 		// Put together the query
 		$lookups = array();
 		foreach($vars as $key => $value) {
-			$value = mysql_real_escape_string($value);
+			$value = mysqli_real_escape_string($database->mysqli, $value);
 			array_push($lookups, "`$key` = '$value'");
 		}
 		$search = implode(" AND ", $lookups);
@@ -63,8 +63,8 @@ class DatabaseObject {
 			}
 		}
 
-		$result = $dbconn->object_query($query);
-
+		$result = $database->object_query($query);
+		
 		if(is_object($result)) {
 			$class = new $type;
 			foreach(get_object_vars($result) as $var => $value)
@@ -99,14 +99,14 @@ class DatabaseObject {
 
 	// Get all of the columns for this table
 	function getColumns() {
-		global $dbconn;
+		global $database;
 
                 // Get the table name
                 $table = strtolower(get_called_class());
 
 		// Get ready to pass back
 		$variables = array();
-		$result = $dbconn->object_array_query("SHOW COLUMNS FROM $table");
+		$result = $database->object_array_query("SHOW COLUMNS FROM $table");
 
 		// Get the primary key so we don't include it
 		$primary_key = $this->_getPrimaryKey();
@@ -122,7 +122,7 @@ class DatabaseObject {
 
 	// Fetch an array of objects from the database that meet these params
 	static function fetchArray($vars = array(), $orderby = array()) {
-		global $dbconn;
+		global $database;
 
 		// Get the table name
                 $table = strtolower(get_called_class());
@@ -130,7 +130,7 @@ class DatabaseObject {
                 // Put together the query
                 $lookups = array();
                 foreach($vars as $key => $value) {
-			$value = mysql_real_escape_string($value);
+			$value = mysqli_real_escape_string($database->mysqli, $value);
                         array_push($lookups, "`$key` = '$value'");
 		}
                 $search = implode(" AND ", $lookups);
@@ -149,7 +149,7 @@ class DatabaseObject {
                         }
                 }
 
-                $result = $dbconn->object_array_query($query);
+                $result = $database->object_array_query($query);
 
 		if(is_array($result)) {
 			$collection = array();
@@ -174,7 +174,7 @@ class DatabaseObject {
 
 	// Save this object to the database
 	function save() {
-		global $dbconn;
+		global $database;
 
 		// Get the MySQL columns to update
 		$cols = implode(",", get_object_vars($this));
@@ -188,7 +188,7 @@ class DatabaseObject {
 						continue;
 				}
 
-				$val = mysql_real_escape_string($val);
+				$val = mysqli_real_escape_string($database->mysqli, $val);
 				$vals[$key] = "'$val'";
 			}
 		}
@@ -206,7 +206,7 @@ class DatabaseObject {
 		$table = strtolower(get_class($this));
 
 		if($this->new_row) {
-			$dbconn->query("INSERT INTO $table ($cols) VALUES($values)");
+			$database->query("INSERT INTO $table ($cols) VALUES($values)");
 			$this->{$this->primary_key} = mysql_insert_id();
 			return(mysql_insert_id());
 		}
@@ -220,7 +220,7 @@ class DatabaseObject {
 
 			$values = implode(",", $updates);
 			$key = $this->primary_key;
-			$dbconn->query("UPDATE $table SET $values WHERE `$key` = '{$this->primary_key_value}'");
+			$database->query("UPDATE $table SET $values WHERE `$key` = '{$this->primary_key_value}'");
 		}
 	}
 }
