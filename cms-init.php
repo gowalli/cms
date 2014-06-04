@@ -22,7 +22,7 @@ else
         error_reporting(E_ALL);
 
 // Include database settings
-include('cms-config.php');
+include('cms-settings.php');
 
 // Make sure we can autoload files
 function yap_autoloader($class) {

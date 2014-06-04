@@ -15,13 +15,13 @@ class MySQL extends Database {
 	// Execute a query, returning the raw results
 	function query($query, $vars = array()) {
 		foreach($vars as $key => $value) {
-			$value = mysql_real_escape_string($value);
+			$value = mysqli_real_escape_string($this->mysqli, $value);
 			$query = str_replace(":$key", $value, $query);
 		}
 
 		$results = $this->mysqli->query($query);
 		if($results == false) {
-			error_log("MySQL error (" . $mysqli->errno . "): " . $mysqli->error);
+			error_log("MySQL error (" . $this->mysqli->errno . "): " . $this->mysqli->error);
 		}
 
 		return($results);
