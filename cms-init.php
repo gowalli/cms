@@ -8,15 +8,11 @@ define('PRODSERV', false);
 // Directory definitions
 define('ROOT_DIR', getcwd() . '/');
 define('LIB_DIR', ROOT_DIR . 'lib/');
-define('VIEW_DIR', ROOT_DIR . 'views/');
 define('MODEL_DIR', ROOT_DIR . 'models/');
-define('CONTROLLER_DIR', ROOT_DIR . 'controllers/');
-define('CONFIG_DIR', ROOT_DIR . 'config/');
-define('THEME_DIR', dirname(ROOT_DIR) . '/themes/');
+define('THEME_DIR', ROOT_DIR . 'themes/');
 
 /* Stop editing here */
 
-include(LIB_DIR . 'utility.php');
 include(ROOT_DIR . 'vendor/autoload.php');
 
 // Set error level
@@ -26,11 +22,11 @@ else
         error_reporting(E_ALL);
 
 // Include database settings
-include(CONFIG_DIR . 'database.php');
+include('cms-config.php');
 
 // Make sure we can autoload files
 function yap_autoloader($class) {
-        $directories = array(CONTROLLER_DIR, LIB_DIR, MODEL_DIR);
+        $directories = array(LIB_DIR, MODEL_DIR);
 
         foreach($directories as $directory) {
                 if(!@include("$directory/$class.php"))
@@ -39,3 +35,8 @@ function yap_autoloader($class) {
 }
 
 spl_autoload_register('yap_autoloader');
+
+$database = DB_TYPE;
+$database = new $dbtype;
+if(strlen(DB_HOST) && strlen(DB_USER) && strlen(DB_PASS) && strlen(DB_NAME))
+        $database->initialize(DB_HOST, DB_USER, DB_PASS, DB_NAME)
